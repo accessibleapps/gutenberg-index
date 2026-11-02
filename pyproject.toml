@@ -1,0 +1,14 @@
+[project]
+name = "gutenberg-index"
+version = "0.1.0"
+description = "Builds the Project Gutenberg search index used by gutenberg_UI"
+requires-python = ">=3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# Installable so gutenberg_UI's tests build their test database from this
+# module's SCHEMA instead of a second copy of it.
+[tool.hatch.build.targets.wheel]
+only-include = ["build_index.py"]
