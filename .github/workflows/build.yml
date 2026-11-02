@@ -1,0 +1,33 @@
+name: Build index
+
+# Weekly rebuild from Project Gutenberg's RDF catalog dump, published to the
+# "latest" release. The dump is the catalog download Gutenberg's robot policy
+# points automated tools at; nothing else on gutenberg.org is fetched.
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest discover -s tests
+      - run: python build_index.py --out dist
+      - name: Publish to the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view latest >/dev/null 2>&1 || gh release create latest \
+            --title "Latest index" \
+            --notes "Rebuilt weekly from the Project Gutenberg RDF catalog."
+          # The database goes up before the manifest that describes it.
+          gh release upload latest dist/gutenberg.sqlite.xz --clobber
+          gh release upload latest dist/gutenberg.json --clobber
